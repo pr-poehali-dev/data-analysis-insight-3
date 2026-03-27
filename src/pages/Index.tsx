@@ -130,7 +130,9 @@ const Index = () => {
             <li><a href="/pricing" className="hover:text-cyan-400 transition">Тарифы</a></li>
           </ul>
           <a
-            href="/dashboard"
+            href="https://t.me/mvpvpnproxybot"
+            target="_blank"
+            rel="noopener noreferrer"
             className="hidden md:block text-sm font-semibold py-2 px-5 rounded-md transition duration-300 text-black"
             style={{ background: 'linear-gradient(90deg, #00c8ff, #0077ff)' }}
           >
@@ -158,7 +160,9 @@ const Index = () => {
               <li><a href="/pricing" className="block py-2 hover:text-cyan-400 transition" onClick={() => setMenuOpen(false)}>Тарифы</a></li>
             </ul>
             <a
-              href="/dashboard"
+              href="https://t.me/mvpvpnproxybot"
+              target="_blank"
+              rel="noopener noreferrer"
               className="mt-4 block text-center font-bold py-3 px-8 rounded-md text-black text-base"
               style={{ background: 'linear-gradient(90deg, #00c8ff, #0077ff)' }}
               onClick={() => setMenuOpen(false)}
@@ -198,7 +202,9 @@ const Index = () => {
         </h2>
         <div className="flex flex-col sm:flex-row gap-4 justify-center w-full sm:w-auto">
           <a
-            href="/dashboard"
+            href="https://t.me/mvpvpnproxybot"
+            target="_blank"
+            rel="noopener noreferrer"
             className="font-bold py-3 px-8 rounded-md transition duration-300 text-black text-base text-center"
             style={{ background: 'linear-gradient(90deg, #00c8ff, #0077ff)' }}
           >
