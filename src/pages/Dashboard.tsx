@@ -1,174 +1,303 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-const subscriptions = [
-  {
-    id: 1,
-    name: 'Устройство #1',
-    plan: '1 месяц',
-    key: 'mvp-xxxx-1a2b-3c4d',
-    expires: '27 апреля 2026',
-    active: true,
-    device: '📱 iPhone 14',
-  },
-  {
-    id: 2,
-    name: 'Устройство #2',
-    plan: '7 дней',
-    key: 'mvp-yyyy-5e6f-7g8h',
-    expires: '1 апреля 2026',
-    active: true,
-    device: '💻 MacBook Pro',
-  },
-  {
-    id: 3,
-    name: 'Устройство #3',
-    plan: '3 месяца',
-    key: 'mvp-zzzz-9i0j-1k2l',
-    expires: '10 марта 2026',
-    active: false,
-    device: '🖥️ Windows PC',
-  },
-]
+const AUTH_URL = 'https://functions.poehali.dev/ca76c96e-ba03-4401-8b5e-9d5a771d5f18'
+const SUB_URL = 'https://functions.poehali.dev/62ca2764-c2a8-4b8a-b222-1bf01cfbb727'
+
+const PAYMENT_LINKS: Record<string, string> = {
+  '7 дней': 'https://yookassa.ru/my/i/acbmaggaAb-9/l',
+  '1 месяц': 'https://yookassa.ru/my/i/acbmk0uCW9xF/l',
+  '3 месяца': 'https://yookassa.ru/my/i/acbmyVbQjTXa/l',
+}
+
+const PAYMENT_PRICES: Record<string, string> = {
+  '7 дней': '60 ₽',
+  '1 месяц': '200 ₽',
+  '3 месяца': '500 ₽',
+}
+
+type Subscription = {
+  plan: string
+  expires_at: string | null
+  vpn_key: string | null
+  active: boolean
+} | null
+
+type Step = 'login' | 'code' | 'dashboard'
 
 const Dashboard = () => {
   const navigate = useNavigate()
-  const [copied, setCopied] = useState<number | null>(null)
+  const [step, setStep] = useState<Step>('login')
+  const [telegramId, setTelegramId] = useState('')
+  const [code, setCode] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [subscription, setSubscription] = useState<Subscription>(null)
+  const [firstName, setFirstName] = useState('')
+  const [copied, setCopied] = useState(false)
 
-  const handleCopy = (key: string, id: number) => {
-    navigator.clipboard.writeText(key)
-    setCopied(id)
-    setTimeout(() => setCopied(null), 2000)
+  useEffect(() => {
+    const session = localStorage.getItem('mvp_session')
+    if (session) loadDashboard(session)
+  }, [])
+
+  const loadDashboard = async (session: string) => {
+    setLoading(true)
+    try {
+      const [userRes, subRes] = await Promise.all([
+        fetch(AUTH_URL, { headers: { 'X-Session-Id': session } }),
+        fetch(SUB_URL, { headers: { 'X-Session-Id': session } }),
+      ])
+      if (!userRes.ok) {
+        localStorage.removeItem('mvp_session')
+        setStep('login')
+        return
+      }
+      const userData = await userRes.json()
+      setFirstName(userData.first_name || '')
+      const subData = await subRes.json()
+      setSubscription(subData.subscription)
+      setStep('dashboard')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const activeCount = subscriptions.filter(s => s.active).length
-  const totalCount = subscriptions.length
+  const sendCode = async () => {
+    if (!telegramId.trim()) return setError('Введите Telegram ID')
+    setLoading(true)
+    setError('')
+    try {
+      const res = await fetch(AUTH_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ telegram_id: parseInt(telegramId), action: 'send-code' }),
+      })
+      if (res.ok) setStep('code')
+      else setError('Не удалось отправить код. Убедитесь, что вы написали боту хотя бы одно сообщение.')
+    } catch {
+      setError('Ошибка соединения')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const verifyCode = async () => {
+    if (!code.trim()) return setError('Введите код')
+    setLoading(true)
+    setError('')
+    try {
+      const res = await fetch(AUTH_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ telegram_id: parseInt(telegramId), code, action: 'verify-code' }),
+      })
+      const data = await res.json()
+      if (data.ok) {
+        localStorage.setItem('mvp_session', data.session)
+        await loadDashboard(data.session)
+      } else {
+        setError('Неверный или истёкший код')
+      }
+    } catch {
+      setError('Ошибка соединения')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const logout = () => {
+    localStorage.removeItem('mvp_session')
+    setStep('login')
+    setTelegramId('')
+    setCode('')
+    setSubscription(null)
+  }
+
+  const handleCopy = () => {
+    if (subscription?.vpn_key) {
+      navigator.clipboard.writeText(subscription.vpn_key)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  const formatDate = (iso: string | null) => {
+    if (!iso) return '—'
+    return new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
+  }
+
+  const bgStyle = { background: 'linear-gradient(135deg, #020b18 0%, #041428 50%, #020b18 100%)' }
+  const cardStyle = { background: 'rgba(0,200,255,0.05)', border: '1px solid rgba(0,200,255,0.15)', backdropFilter: 'blur(12px)' }
 
   return (
-    <div
-      className="min-h-screen w-full px-4 py-10 relative overflow-hidden"
-      style={{ background: 'linear-gradient(135deg, #020b18 0%, #041428 50%, #020b18 100%)' }}
-    >
-      {/* Glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] pointer-events-none" style={{ background: 'radial-gradient(ellipse, rgba(0,200,255,0.06) 0%, transparent 70%)' }} />
+    <div className="min-h-screen w-full flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden" style={bgStyle}>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(0,200,255,0.07) 0%, transparent 70%)' }} />
 
-      <div className="max-w-3xl mx-auto relative z-10">
+      <button onClick={() => navigate('/')} className="absolute top-6 left-6 text-white/40 hover:text-white transition text-sm z-10">← Главная</button>
 
-        {/* Header */}
-        <div className="flex items-center justify-between mb-10">
-          <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/')} className="text-white/40 hover:text-white transition text-sm">← Главная</button>
+      {loading && step !== 'dashboard' && (
+        <div className="text-white/50 text-sm">Загрузка...</div>
+      )}
+
+      {!loading || step === 'dashboard' ? (
+        <div className="w-full max-w-md relative z-10">
+
+          {/* LOGO */}
+          <div className="text-center mb-8">
+            <span className="text-2xl font-bold text-white">MVP <span style={{ color: '#00c8ff' }}>VPN</span></span>
+            <p className="text-white/40 text-sm mt-1">Личный кабинет</p>
           </div>
-          <a
-            href="https://t.me/mvpvpnproxybot"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm font-bold py-2 px-5 rounded-md text-black transition"
-            style={{ background: 'linear-gradient(90deg, #00c8ff, #0077ff)' }}
-          >
-            + Получить ключ
-          </a>
-        </div>
 
-        {/* Title */}
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-1">Личный кабинет</h1>
-          <p className="text-white/40 text-sm">MVP VPN — управление подписками</p>
-        </div>
+          {/* STEP: LOGIN */}
+          {step === 'login' && (
+            <div className="rounded-2xl p-7" style={cardStyle}>
+              <h2 className="text-xl font-bold text-white mb-1">Вход через Telegram</h2>
+              <p className="text-white/40 text-sm mb-6">Введите ваш Telegram ID — бот пришлёт код для входа</p>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
-          <div className="rounded-xl p-4 text-center" style={{ background: 'rgba(0,200,255,0.06)', border: '1px solid rgba(0,200,255,0.15)' }}>
-            <div className="text-3xl font-bold text-white">{activeCount}</div>
-            <div className="text-white/40 text-xs mt-1">Активных</div>
-          </div>
-          <div className="rounded-xl p-4 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-            <div className="text-3xl font-bold text-white">{totalCount - activeCount}</div>
-            <div className="text-white/40 text-xs mt-1">Истёкших</div>
-          </div>
-          <div className="rounded-xl p-4 text-center col-span-2 sm:col-span-1" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
-            <div className="text-3xl font-bold text-white">{totalCount}</div>
-            <div className="text-white/40 text-xs mt-1">Всего устройств</div>
-          </div>
-        </div>
+              <label className="block text-white/50 text-xs mb-1">Telegram ID</label>
+              <input
+                type="number"
+                value={telegramId}
+                onChange={e => setTelegramId(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && sendCode()}
+                placeholder="123456789"
+                className="w-full rounded-lg px-4 py-3 text-white text-sm mb-1 outline-none"
+                style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(0,200,255,0.2)' }}
+              />
+              <p className="text-white/25 text-xs mb-5">
+                Узнать свой ID: напишите{' '}
+                <a href="https://t.me/userinfobot" target="_blank" rel="noopener noreferrer" className="underline" style={{ color: '#00c8ff' }}>@userinfobot</a>
+                {' '}в Telegram
+              </p>
 
-        {/* Subscriptions */}
-        <h2 className="text-lg font-semibold text-white mb-4">Мои подписки</h2>
-        <div className="flex flex-col gap-4">
-          {subscriptions.map((sub) => (
-            <div
-              key={sub.id}
-              className="rounded-2xl p-5"
-              style={{
-                background: sub.active ? 'rgba(0,200,255,0.05)' : 'rgba(255,255,255,0.02)',
-                border: sub.active ? '1px solid rgba(0,200,255,0.2)' : '1px solid rgba(255,255,255,0.06)',
-                backdropFilter: 'blur(10px)',
-              }}
-            >
-              <div className="flex items-start justify-between gap-4 flex-wrap">
-                <div className="flex items-center gap-3">
-                  <div className="text-2xl">{sub.device.split(' ')[0]}</div>
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-white font-semibold text-sm">{sub.name}</span>
-                      <span
-                        className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                        style={sub.active
-                          ? { background: 'rgba(0,255,150,0.15)', color: '#00ff96' }
-                          : { background: 'rgba(255,80,80,0.15)', color: '#ff6060' }
-                        }
+              {error && <p className="text-red-400 text-xs mb-3">{error}</p>}
+
+              <button
+                onClick={sendCode}
+                disabled={loading}
+                className="w-full font-bold py-3 rounded-lg text-black transition disabled:opacity-50"
+                style={{ background: 'linear-gradient(90deg, #00c8ff, #0077ff)' }}
+              >
+                {loading ? 'Отправляю...' : 'Получить код'}
+              </button>
+            </div>
+          )}
+
+          {/* STEP: CODE */}
+          {step === 'code' && (
+            <div className="rounded-2xl p-7" style={cardStyle}>
+              <h2 className="text-xl font-bold text-white mb-1">Введите код</h2>
+              <p className="text-white/40 text-sm mb-6">
+                Код отправлен в Telegram на ID <span style={{ color: '#00c8ff' }}>{telegramId}</span>
+              </p>
+
+              <input
+                type="number"
+                value={code}
+                onChange={e => setCode(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && verifyCode()}
+                placeholder="000000"
+                className="w-full rounded-lg px-4 py-3 text-white text-2xl font-bold mb-5 outline-none text-center tracking-widest"
+                style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(0,200,255,0.2)' }}
+              />
+
+              {error && <p className="text-red-400 text-xs mb-3">{error}</p>}
+
+              <button
+                onClick={verifyCode}
+                disabled={loading}
+                className="w-full font-bold py-3 rounded-lg text-black transition disabled:opacity-50 mb-3"
+                style={{ background: 'linear-gradient(90deg, #00c8ff, #0077ff)' }}
+              >
+                {loading ? 'Проверяю...' : 'Войти'}
+              </button>
+              <button onClick={() => { setStep('login'); setError('') }} className="w-full text-white/40 hover:text-white text-sm transition py-2">
+                ← Назад
+              </button>
+            </div>
+          )}
+
+          {/* STEP: DASHBOARD */}
+          {step === 'dashboard' && (
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-white">
+                    {firstName ? `Привет, ${firstName}! 👋` : 'Личный кабинет'}
+                  </h2>
+                  <p className="text-white/40 text-xs mt-0.5">MVP VPN — ваша подписка</p>
+                </div>
+                <button onClick={logout} className="text-white/30 hover:text-white/60 text-xs transition">Выйти</button>
+              </div>
+
+              {/* Активная подписка */}
+              {subscription && subscription.active && (
+                <div className="rounded-2xl p-6" style={cardStyle}>
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="text-xs px-2 py-0.5 rounded-full font-semibold" style={{ background: 'rgba(0,255,150,0.15)', color: '#00ff96' }}>● Активна</span>
+                    <span className="text-white/50 text-xs">{subscription.plan}</span>
+                  </div>
+                  <p className="text-white/40 text-xs mb-1">Действует до</p>
+                  <p className="text-white text-2xl font-bold mb-5">{formatDate(subscription.expires_at)}</p>
+
+                  {subscription.vpn_key && (
+                    <>
+                      <p className="text-white/40 text-xs mb-2">Ваш VPN ключ</p>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 rounded-lg px-3 py-2 text-xs font-mono truncate" style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(0,200,255,0.15)', color: '#00c8ff' }}>
+                          {subscription.vpn_key}
+                        </div>
+                        <button
+                          onClick={handleCopy}
+                          className="text-xs px-3 py-2 rounded-lg font-semibold whitespace-nowrap transition"
+                          style={copied
+                            ? { background: 'rgba(0,255,150,0.15)', color: '#00ff96' }
+                            : { background: 'rgba(0,200,255,0.1)', color: '#00c8ff', border: '1px solid rgba(0,200,255,0.2)' }
+                          }
+                        >
+                          {copied ? '✓ Скопировано' : 'Копировать'}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Истекшая подписка */}
+              {subscription && !subscription.active && (
+                <div className="rounded-2xl p-4" style={{ background: 'rgba(255,80,80,0.05)', border: '1px solid rgba(255,80,80,0.2)' }}>
+                  <span className="text-xs px-2 py-0.5 rounded-full font-semibold" style={{ background: 'rgba(255,80,80,0.15)', color: '#ff6060' }}>● Истекла</span>
+                  <p className="text-white/40 text-xs mt-2">Истекла {formatDate(subscription.expires_at)}</p>
+                </div>
+              )}
+
+              {/* Нет подписки или истекла — оплата */}
+              {(!subscription || !subscription.active) && (
+                <div className="rounded-2xl p-6" style={{ background: 'rgba(0,200,255,0.04)', border: '1px solid rgba(0,200,255,0.12)' }}>
+                  <h3 className="text-white font-bold mb-1">Выберите тариф</h3>
+                  <p className="text-white/40 text-xs mb-4">После оплаты ключ придёт в Telegram-бот</p>
+                  <div className="flex flex-col gap-3">
+                    {Object.entries(PAYMENT_LINKS).map(([plan, link]) => (
+                      <a
+                        key={plan}
+                        href={link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-between rounded-xl px-4 py-3 transition hover:-translate-y-0.5"
+                        style={{ background: 'rgba(0,200,255,0.07)', border: '1px solid rgba(0,200,255,0.18)' }}
                       >
-                        {sub.active ? '● Активна' : '● Истекла'}
-                      </span>
-                    </div>
-                    <div className="text-white/40 text-xs mt-0.5">{sub.device.split(' ').slice(1).join(' ')} · Тариф: {sub.plan}</div>
+                        <span className="text-white font-semibold text-sm">{plan}</span>
+                        <span className="font-bold text-sm" style={{ color: '#00c8ff' }}>{PAYMENT_PRICES[plan]} →</span>
+                      </a>
+                    ))}
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-white/30 text-xs">
-                    {sub.active ? 'Действует до' : 'Истекла'}
-                  </div>
-                  <div className={`text-sm font-semibold ${sub.active ? 'text-white' : 'text-white/30'}`}>{sub.expires}</div>
-                </div>
-              </div>
-
-              {/* Key */}
-              <div className="mt-4 flex items-center gap-2">
-                <div
-                  className="flex-1 rounded-lg px-3 py-2 text-xs font-mono truncate"
-                  style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.07)', color: sub.active ? '#00c8ff' : '#ffffff30' }}
-                >
-                  {sub.key}
-                </div>
-                <button
-                  onClick={() => handleCopy(sub.key, sub.id)}
-                  className="text-xs px-3 py-2 rounded-lg font-semibold transition whitespace-nowrap"
-                  style={copied === sub.id
-                    ? { background: 'rgba(0,255,150,0.15)', color: '#00ff96' }
-                    : { background: 'rgba(0,200,255,0.1)', color: '#00c8ff', border: '1px solid rgba(0,200,255,0.2)' }
-                  }
-                >
-                  {copied === sub.id ? '✓ Скопировано' : 'Копировать'}
-                </button>
-              </div>
-
-              {!sub.active && (
-                <a
-                  href="https://t.me/mvpvpnproxybot"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-3 inline-block text-xs font-semibold py-2 px-4 rounded-lg text-black transition"
-                  style={{ background: 'linear-gradient(90deg, #00c8ff, #0077ff)' }}
-                >
-                  Продлить подписку →
-                </a>
               )}
             </div>
-          ))}
+          )}
         </div>
-
-        <p className="text-white/20 text-xs text-center mt-10">MVP VPN · Личный кабинет · Управление ключами</p>
-      </div>
+      ) : null}
     </div>
   )
 }
