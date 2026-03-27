@@ -246,9 +246,9 @@ const Index = () => {
               <p className="text-white/50 text-sm">Без замедлений и блокировок — сотрудники работают с любыми сервисами и ресурсами по всему миру на полной скорости.</p>
             </div>
             <div className="rounded-lg p-5" style={{ background: 'rgba(0,200,255,0.05)', border: '1px solid rgba(0,200,255,0.15)', backdropFilter: 'blur(10px)' }}>
-              <div className="flex flex-wrap gap-1 mb-3 text-lg">📸 ▶️ 🎵 ✈️</div>
-              <h4 className="text-base font-semibold mb-2 text-white">Доступ к любым соцсетям</h4>
-              <p className="text-white/50 text-sm">Instagram, YouTube, TikTok, Telegram и другие — открывайте любые платформы без ограничений из любой точки мира.</p>
+              <div className="flex flex-wrap gap-1 mb-3 text-xl">📸 ▶️ 🎵 🎮</div>
+              <h4 className="text-base font-semibold mb-2 text-white">Доступ к любым платформам</h4>
+              <p className="text-white/50 text-sm">TikTok, Instagram, YouTube, Discord, Brawl Stars и другие игры — без блокировок и задержек, как будто их никогда не было.</p>
             </div>
           </div>
         </div>
