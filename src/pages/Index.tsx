@@ -213,6 +213,20 @@ const Index = () => {
             <span className="group-hover:translate-x-1 transition-transform duration-200">→</span>
           </a>
         </div>
+
+        {/* Работает через */}
+        <div className="mt-8 flex flex-col items-center gap-3">
+          <p className="text-white/30 text-xs uppercase tracking-widest">Работает через</p>
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <img src="https://cdn.poehali.dev/projects/d539374e-ced8-4860-9ec9-ebd2c91c5053/bucket/79d56c2a-dca9-4932-b053-376785cf2e33.jpg" alt="MVP VPN" className="h-8 w-auto rounded-md" />
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <img src="https://cdn.poehali.dev/projects/d539374e-ced8-4860-9ec9-ebd2c91c5053/bucket/21a5dc72-19e2-40a4-840d-48799b33eabb.png" alt="V2Ray" className="h-8 w-8 rounded-lg" />
+              <span className="text-white font-bold text-sm">V2RayTun</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* FEATURES */}
