@@ -131,7 +131,7 @@ const Index = () => {
           </div>
           <ul className="hidden md:flex space-x-6 text-white/80">
             <li><a href="#features" className="hover:text-cyan-400 transition">Возможности</a></li>
-            <li><a href="#how-it-works" className="hover:text-cyan-400 transition">Как работает</a></li>
+            <li><a href="/how-it-works" className="hover:text-cyan-400 transition">Как работает</a></li>
             <li><a href="/pricing" className="hover:text-cyan-400 transition">Тарифы</a></li>
             <li><a href="#contact" className="hover:text-cyan-400 transition">Контакты</a></li>
           </ul>
@@ -181,21 +181,6 @@ const Index = () => {
       <Canvas shadows camera={{ position: [30, 30, 30], fov: 50 }} className="absolute inset-0">
         <Scene />
       </Canvas>
-
-      {/* How It Works Section */}
-      <section id="how-it-works" className="absolute bottom-[320px] left-0 right-0 z-10 px-4 hidden md:block">
-        <div className="max-w-3xl mx-auto rounded-xl p-6" style={{ background: 'rgba(0,200,255,0.04)', border: '1px solid rgba(0,200,255,0.12)', backdropFilter: 'blur(12px)' }}>
-          <div className="flex items-start gap-4">
-            <div className="text-3xl mt-1">🔑</div>
-            <div>
-              <h4 className="text-lg font-semibold text-white mb-2">Как работают ключи V2Ray с TUN</h4>
-              <p className="text-white/55 text-sm leading-relaxed">
-                Ключи для VPN через <span className="text-cyan-400 font-medium">V2Ray с TUN</span> — это секретные токены, которые аутентифицируют устройство и позволяют установить безопасное соединение. TUN-адаптер обеспечивает прозрачную маршрутизацию <span className="text-white/80">всего системного трафика</span> через зашифрованный канал, делая работу VPN максимально удобной и скрытой.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Features Section */}
       <section id="features" className="absolute bottom-0 left-0 right-0 z-10 pt-32 pb-12" style={{ background: 'linear-gradient(to top, #020b18 60%, transparent)' }}>
