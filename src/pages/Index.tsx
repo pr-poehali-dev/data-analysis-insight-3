@@ -132,7 +132,7 @@ const Index = () => {
           <ul className="hidden md:flex space-x-6 text-white/80">
             <li><a href="#features" className="hover:text-cyan-400 transition">Возможности</a></li>
             <li><a href="#how-it-works" className="hover:text-cyan-400 transition">Как работает</a></li>
-            <li><a href="#pricing" className="hover:text-cyan-400 transition">Тарифы</a></li>
+            <li><a href="/pricing" className="hover:text-cyan-400 transition">Тарифы</a></li>
             <li><a href="#contact" className="hover:text-cyan-400 transition">Контакты</a></li>
           </ul>
           <button
