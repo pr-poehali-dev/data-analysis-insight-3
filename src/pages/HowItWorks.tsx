@@ -69,9 +69,7 @@ const HowItWorks = () => {
 
         <div className="text-center">
           <a
-            href="https://t.me/mvpvpnproxybot"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/dashboard"
             className="inline-block font-bold py-3 px-10 rounded-lg transition duration-300 text-black"
             style={{ background: 'linear-gradient(90deg, #00c8ff, #0077ff)' }}
           >

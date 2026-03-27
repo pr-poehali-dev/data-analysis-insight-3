@@ -99,9 +99,7 @@ const Pricing = () => {
             <p className="text-white/30 text-xs mb-7">{plan.perDay} ₽ в день</p>
 
             <a
-              href="https://t.me/mvpvpnproxybot"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/dashboard"
               className="w-full py-3 rounded-lg font-bold text-sm transition duration-300"
               style={
                 plan.highlight
