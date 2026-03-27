@@ -190,9 +190,9 @@ const Index = () => {
               <p className="text-white/50">Высокоскоростные серверы по всему миру обеспечивают стабильное соединение без задержек для всей команды.</p>
             </div>
             <div className="rounded-lg p-6" style={{ background: 'rgba(0,200,255,0.05)', border: '1px solid rgba(0,200,255,0.15)', backdropFilter: 'blur(10px)' }}>
-              <div className="text-2xl mb-3">📊</div>
-              <h4 className="text-xl font-semibold mb-3 text-white">Аналитика и отчёты</h4>
-              <p className="text-white/50">Полная статистика использования, мониторинг трафика и автоматические отчёты для руководства компании.</p>
+              <div className="text-2xl mb-3">⚡</div>
+              <h4 className="text-xl font-semibold mb-3 text-white">Быстрый интернет без ограничений</h4>
+              <p className="text-white/50">Без замедлений и блокировок — сотрудники работают с любыми сервисами и ресурсами по всему миру на полной скорости.</p>
             </div>
           </div>
         </div>
