@@ -130,13 +130,11 @@ const Index = () => {
             <li><a href="/pricing" className="hover:text-cyan-400 transition">Тарифы</a></li>
           </ul>
           <a
-            href="https://t.me/mvpvpnproxybot"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/dashboard"
             className="hidden md:block text-sm font-semibold py-2 px-5 rounded-md transition duration-300 text-black"
             style={{ background: 'linear-gradient(90deg, #00c8ff, #0077ff)' }}
           >
-            Получить ключ
+            Личный кабинет
           </a>
 
           {/* Burger */}
