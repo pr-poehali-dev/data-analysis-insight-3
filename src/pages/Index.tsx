@@ -229,7 +229,7 @@ const Index = () => {
       >
         <div className="max-w-6xl mx-auto">
           <h3 className="text-xl md:text-3xl font-bold text-center mb-6 text-white">Почему MVP VPN?</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="rounded-lg p-5" style={{ background: 'rgba(0,200,255,0.05)', border: '1px solid rgba(0,200,255,0.15)', backdropFilter: 'blur(10px)' }}>
               <div className="text-2xl mb-3">🔐</div>
               <h4 className="text-base font-semibold mb-2 text-white">Личный кабинет компании</h4>
@@ -244,6 +244,11 @@ const Index = () => {
               <div className="text-2xl mb-3">⚡</div>
               <h4 className="text-base font-semibold mb-2 text-white">Быстрый интернет без ограничений</h4>
               <p className="text-white/50 text-sm">Без замедлений и блокировок — сотрудники работают с любыми сервисами и ресурсами по всему миру на полной скорости.</p>
+            </div>
+            <div className="rounded-lg p-5" style={{ background: 'rgba(0,200,255,0.05)', border: '1px solid rgba(0,200,255,0.15)', backdropFilter: 'blur(10px)' }}>
+              <div className="flex flex-wrap gap-1 mb-3 text-lg">📸 ▶️ 🎵 ✈️</div>
+              <h4 className="text-base font-semibold mb-2 text-white">Доступ к любым соцсетям</h4>
+              <p className="text-white/50 text-sm">Instagram, YouTube, TikTok, Telegram и другие — открывайте любые платформы без ограничений из любой точки мира.</p>
             </div>
           </div>
         </div>
