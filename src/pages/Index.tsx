@@ -162,7 +162,7 @@ const Index = () => {
             className="font-bold py-3 px-8 rounded-md transition duration-300 text-black text-base"
             style={{ background: 'linear-gradient(90deg, #00c8ff, #0077ff)' }}
           >
-            Получить демо-доступ
+            Получить ключ
           </button>
           <button className="font-semibold py-3 px-8 rounded-md transition duration-300 text-white/80 hover:text-white text-base" style={{ border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.05)' }}>
             Узнать подробнее
