@@ -1,17 +1,13 @@
 """
-Авторизация пользователей через Telegram-бот.
-POST /send-code — отправляет код в Telegram
-POST /verify-code — проверяет код и возвращает сессию
-GET /me — возвращает данные текущего пользователя по сессии
+Авторизация пользователей MVP VPN по логину и паролю.
+POST register — регистрация нового пользователя
+POST login — вход, возвращает сессию
+GET / — получить данные по сессии
 """
 import os
 import json
-import random
-import string
 import hashlib
 import psycopg2
-import urllib.request
-import urllib.parse
 
 CORS_HEADERS = {
     'Access-Control-Allow-Origin': '*',
@@ -25,23 +21,18 @@ def get_conn():
 def get_schema():
     return os.environ.get('MAIN_DB_SCHEMA', 'public')
 
-def send_telegram_message(chat_id: int, text: str):
-    token = os.environ['TELEGRAM_BOT_TOKEN']
-    url = f"https://api.telegram.org/bot{token}/sendMessage"
-    data = urllib.parse.urlencode({'chat_id': chat_id, 'text': text}).encode()
-    req = urllib.request.Request(url, data=data, method='POST')
-    urllib.request.urlopen(req, timeout=10)
+def hash_password(password: str) -> str:
+    secret = os.environ.get('TELEGRAM_BOT_TOKEN', 'mvp_secret')
+    return hashlib.sha256(f"{password}:{secret}".encode()).hexdigest()
 
-def make_session_token(telegram_id: int) -> str:
-    secret = os.environ.get('TELEGRAM_BOT_TOKEN', 'secret')
-    raw = f"{telegram_id}:{secret}"
-    return hashlib.sha256(raw.encode()).hexdigest()
+def make_session(username: str) -> str:
+    secret = os.environ.get('TELEGRAM_BOT_TOKEN', 'mvp_secret')
+    return hashlib.sha256(f"session:{username}:{secret}".encode()).hexdigest()
 
 def handler(event: dict, context) -> dict:
     if event.get('httpMethod') == 'OPTIONS':
         return {'statusCode': 200, 'headers': CORS_HEADERS, 'body': ''}
 
-    path = event.get('path', '/')
     method = event.get('httpMethod', 'GET')
     schema = get_schema()
 
@@ -52,80 +43,54 @@ def handler(event: dict, context) -> dict:
             return {'statusCode': 401, 'headers': CORS_HEADERS, 'body': json.dumps({'error': 'no session'})}
         conn = get_conn()
         cur = conn.cursor()
-        cur.execute(f"SELECT telegram_id, username, first_name FROM {schema}.mvp_vpn_users WHERE id > 0")
+        cur.execute(f"SELECT id, username_login FROM {schema}.mvp_vpn_users WHERE username_login IS NOT NULL")
         rows = cur.fetchall()
-        for row in rows:
-            tid = row[0]
-            if make_session_token(tid) == session_id:
-                cur.execute(
-                    f"SELECT plan, expires_at, vpn_key FROM {schema}.mvp_vpn_subscriptions WHERE telegram_id = %s ORDER BY expires_at DESC",
-                    (tid,)
-                )
-                subs = cur.fetchall()
-                conn.close()
-                return {
-                    'statusCode': 200,
-                    'headers': CORS_HEADERS,
-                    'body': json.dumps({
-                        'telegram_id': tid,
-                        'username': row[1],
-                        'first_name': row[2],
-                        'subscriptions': [
-                            {'plan': s[0], 'expires_at': s[1].isoformat() if s[1] else None, 'vpn_key': s[2]}
-                            for s in subs
-                        ]
-                    })
-                }
         conn.close()
+        for row in rows:
+            if make_session(row[1]) == session_id:
+                return {'statusCode': 200, 'headers': CORS_HEADERS, 'body': json.dumps({'id': row[0], 'username': row[1]})}
         return {'statusCode': 401, 'headers': CORS_HEADERS, 'body': json.dumps({'error': 'invalid session'})}
 
     body = json.loads(event.get('body') or '{}')
+    action = body.get('action', '')
 
-    # POST /send-code
-    if method == 'POST' and (body.get('action') == 'send-code' or '/send-code' in path):
-        telegram_id = body.get('telegram_id')
-        if not telegram_id:
-            return {'statusCode': 400, 'headers': CORS_HEADERS, 'body': json.dumps({'error': 'telegram_id required'})}
-        telegram_id = int(telegram_id)
-        code = ''.join(random.choices(string.digits, k=6))
+    # POST register
+    if action == 'register':
+        username = (body.get('username') or '').strip().lower()
+        password = body.get('password', '')
+        if not username or not password:
+            return {'statusCode': 400, 'headers': CORS_HEADERS, 'body': json.dumps({'error': 'Заполните все поля'})}
+        if len(password) < 6:
+            return {'statusCode': 400, 'headers': CORS_HEADERS, 'body': json.dumps({'error': 'Пароль минимум 6 символов'})}
         conn = get_conn()
         cur = conn.cursor()
-        cur.execute(
-            f"INSERT INTO {schema}.mvp_vpn_auth_codes (telegram_id, code) VALUES (%s, %s)",
-            (telegram_id, code)
-        )
-        conn.commit()
-        conn.close()
-        send_telegram_message(telegram_id, f"🔐 Ваш код для входа в MVP VPN: {code}\n\nКод действителен 5 минут.")
-        return {'statusCode': 200, 'headers': CORS_HEADERS, 'body': json.dumps({'ok': True})}
-
-    # POST /verify-code
-    if method == 'POST' and (body.get('action') == 'verify-code' or '/verify-code' in path):
-        telegram_id = int(body.get('telegram_id', 0))
-        code = body.get('code', '')
-        if not telegram_id or not code:
-            return {'statusCode': 400, 'headers': CORS_HEADERS, 'body': json.dumps({'error': 'fields required'})}
-        conn = get_conn()
-        cur = conn.cursor()
-        cur.execute(
-            f"""SELECT id FROM {schema}.mvp_vpn_auth_codes
-                WHERE telegram_id = %s AND code = %s AND used = FALSE
-                AND created_at > NOW() - INTERVAL '5 minutes'
-                ORDER BY created_at DESC LIMIT 1""",
-            (telegram_id, code)
-        )
-        row = cur.fetchone()
-        if not row:
+        cur.execute(f"SELECT id FROM {schema}.mvp_vpn_users WHERE username_login = %s", (username,))
+        if cur.fetchone():
             conn.close()
-            return {'statusCode': 401, 'headers': CORS_HEADERS, 'body': json.dumps({'error': 'invalid or expired code'})}
-        cur.execute(f"UPDATE {schema}.mvp_vpn_auth_codes SET used = TRUE WHERE id = %s", (row[0],))
+            return {'statusCode': 409, 'headers': CORS_HEADERS, 'body': json.dumps({'error': 'Такой пользователь уже существует'})}
         cur.execute(
-            f"INSERT INTO {schema}.mvp_vpn_users (telegram_id) VALUES (%s) ON CONFLICT (telegram_id) DO NOTHING",
-            (telegram_id,)
+            f"INSERT INTO {schema}.mvp_vpn_users (username_login, password_hash, telegram_id) VALUES (%s, %s, %s)",
+            (username, hash_password(password), 0)
         )
         conn.commit()
         conn.close()
-        session = make_session_token(telegram_id)
-        return {'statusCode': 200, 'headers': CORS_HEADERS, 'body': json.dumps({'ok': True, 'session': session, 'telegram_id': telegram_id})}
+        session = make_session(username)
+        return {'statusCode': 200, 'headers': CORS_HEADERS, 'body': json.dumps({'ok': True, 'session': session, 'username': username})}
+
+    # POST login
+    if action == 'login':
+        username = (body.get('username') or '').strip().lower()
+        password = body.get('password', '')
+        if not username or not password:
+            return {'statusCode': 400, 'headers': CORS_HEADERS, 'body': json.dumps({'error': 'Заполните все поля'})}
+        conn = get_conn()
+        cur = conn.cursor()
+        cur.execute(f"SELECT id, password_hash FROM {schema}.mvp_vpn_users WHERE username_login = %s", (username,))
+        row = cur.fetchone()
+        conn.close()
+        if not row or row[1] != hash_password(password):
+            return {'statusCode': 401, 'headers': CORS_HEADERS, 'body': json.dumps({'error': 'Неверный логин или пароль'})}
+        session = make_session(username)
+        return {'statusCode': 200, 'headers': CORS_HEADERS, 'body': json.dumps({'ok': True, 'session': session, 'username': username})}
 
     return {'statusCode': 404, 'headers': CORS_HEADERS, 'body': json.dumps({'error': 'not found'})}

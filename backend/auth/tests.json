@@ -7,7 +7,7 @@
       "expectedStatus": 200
     },
     {
-      "name": "GET /me without session",
+      "name": "GET без сессии",
       "method": "GET",
       "path": "/",
       "expectedStatus": 401,
