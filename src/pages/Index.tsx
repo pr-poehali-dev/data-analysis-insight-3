@@ -249,6 +249,7 @@ const Index = () => {
               <div className="flex flex-wrap gap-1 mb-3 text-xl">📸 ▶️ 🎵 🎮</div>
               <h4 className="text-base font-semibold mb-2 text-white">Доступ к любым платформам</h4>
               <p className="text-white/50 text-sm">TikTok, Instagram, YouTube, Discord, Brawl Stars и другие игры — без блокировок и задержек, как будто их никогда не было.</p>
+              <a href="/platforms" className="inline-block mt-3 text-xs font-semibold transition" style={{ color: '#00c8ff' }}>Все платформы →</a>
             </div>
           </div>
         </div>
