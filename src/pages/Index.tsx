@@ -167,9 +167,14 @@ const Index = () => {
           >
             Получить ключ
           </a>
-          <button className="font-semibold py-3 px-8 rounded-md transition duration-300 text-white/80 hover:text-white text-base" style={{ border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.05)' }}>
-            Узнать подробнее
-          </button>
+          <a
+            href="/pricing"
+            className="font-semibold py-3 px-8 rounded-md transition duration-300 text-base flex items-center gap-2 group"
+            style={{ border: '1px solid rgba(0,200,255,0.3)', background: 'rgba(0,200,255,0.06)', color: '#00c8ff' }}
+          >
+            <span>Смотреть тарифы</span>
+            <span className="group-hover:translate-x-1 transition-transform duration-200">→</span>
+          </a>
         </div>
       </div>
 
