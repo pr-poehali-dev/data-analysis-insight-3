@@ -194,7 +194,7 @@ const Index = () => {
           </span>
         </h1>
         <h2 className="text-base md:text-xl mb-8 text-white/60 max-w-xl mx-auto">
-          Управляйте доступом сотрудников, трафиком и безопасностью компании через единый личный кабинет
+          Конфигурации и импорт в V2RayTun — через URL, QR-код или файл. Протоколы VLESS Reality и WebSocket с готовыми примерами от сервиса
         </h2>
         <div className="flex flex-col sm:flex-row gap-4 justify-center w-full sm:w-auto">
           <a
