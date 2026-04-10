@@ -1,0 +1,23 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "GET without payment_id returns 400",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 400
+    },
+    {
+      "name": "POST non-payment event returns ok",
+      "method": "POST",
+      "path": "/",
+      "body": {"event": "payment.created"},
+      "expectedStatus": 200
+    }
+  ]
+}

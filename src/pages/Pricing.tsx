@@ -2,46 +2,61 @@ import { useNavigate } from 'react-router-dom'
 
 const plans = [
   {
-    period: '7 дней',
-    price: '60',
-    perDay: '~8.5',
+    key: '30d',
+    period: '30 дней',
+    price: '200',
+    perDay: '~6.7',
     emoji: '⚡',
     label: 'Попробовать',
     highlight: false,
-    description: 'Идеально для теста перед подключением команды',
+    description: 'Идеально для теста перед долгосрочным подключением',
   },
   {
-    period: '1 месяц',
-    price: '200',
-    perDay: '~6.7',
+    key: '90d',
+    period: '90 дней',
+    price: '500',
+    perDay: '~5.5',
     emoji: '🔥',
     label: 'Популярный выбор',
     highlight: true,
     description: 'Оптимальный вариант для постоянного использования',
   },
   {
-    period: '3 месяца',
-    price: '500',
-    perDay: '~5.5',
+    key: '180d',
+    period: '180 дней',
+    price: '900',
+    perDay: '~5.0',
     emoji: '💎',
-    label: 'Выгоднее всего',
+    label: 'Выгоднее',
     highlight: false,
-    description: 'Максимальная экономия для долгосрочного подключения',
+    description: 'Полгода стабильного VPN с максимальной скоростью',
+  },
+  {
+    key: '365d',
+    period: '365 дней',
+    price: '1500',
+    perDay: '~4.1',
+    emoji: '🚀',
+    label: 'Максимум выгоды',
+    highlight: false,
+    description: 'Весь год без забот — самая низкая цена за день',
   },
 ]
 
 const Pricing = () => {
   const navigate = useNavigate()
 
+  const handleBuy = (plan: typeof plans[0]) => {
+    navigate(`/checkout?plan=${plan.key}&price=${plan.price}&period=${encodeURIComponent(plan.period)}`)
+  }
+
   return (
     <div
       className="min-h-screen w-full flex flex-col items-center justify-center px-4 py-16 relative overflow-hidden"
       style={{ background: 'linear-gradient(135deg, #020b18 0%, #041428 50%, #020b18 100%)' }}
     >
-      {/* Background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(0,200,255,0.06) 0%, transparent 70%)' }} />
 
-      {/* Back */}
       <button
         onClick={() => navigate('/')}
         className="absolute top-6 left-6 text-white/50 hover:text-white transition text-sm flex items-center gap-2"
@@ -49,7 +64,6 @@ const Pricing = () => {
         ← На главную
       </button>
 
-      {/* Header */}
       <div className="text-center mb-12 z-10">
         <div className="inline-block mb-4 px-3 py-1 rounded-full text-xs font-semibold tracking-widest uppercase" style={{ background: 'rgba(0,200,255,0.1)', border: '1px solid rgba(0,200,255,0.3)', color: '#00c8ff' }}>
           Тарифы
@@ -61,15 +75,14 @@ const Pricing = () => {
           </span>
         </h1>
         <p className="text-white/50 text-lg max-w-md mx-auto">
-          Выберите удобный период — ключ придёт в Telegram-бот мгновенно
+          Выберите период — ключ придёт сразу после оплаты
         </p>
       </div>
 
-      {/* Cards */}
-      <div className="grid md:grid-cols-3 gap-6 max-w-4xl w-full z-10">
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl w-full z-10">
         {plans.map((plan) => (
           <div
-            key={plan.period}
+            key={plan.key}
             className="relative rounded-2xl p-7 flex flex-col items-center text-center transition-transform hover:-translate-y-1"
             style={{
               background: plan.highlight
@@ -98,11 +111,9 @@ const Pricing = () => {
             </div>
             <p className="text-white/30 text-xs mb-7">{plan.perDay} ₽ в день</p>
 
-            <a
-              href="https://t.me/mvpvpnproxybot"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full py-3 rounded-lg font-bold text-sm transition duration-300"
+            <button
+              onClick={() => handleBuy(plan)}
+              className="w-full py-3 rounded-lg font-bold text-sm transition duration-300 cursor-pointer"
               style={
                 plan.highlight
                   ? { background: 'linear-gradient(90deg, #00c8ff, #0077ff)', color: '#000' }
@@ -110,14 +121,13 @@ const Pricing = () => {
               }
             >
               {plan.label} →
-            </a>
+            </button>
           </div>
         ))}
       </div>
 
-      {/* Footer note */}
       <p className="text-white/25 text-xs mt-10 z-10 text-center">
-        Оплата через Telegram-бот · Ключ активируется мгновенно · Поддержка 24/7
+        Оплата через ЮКасса · Ключ активируется мгновенно · Поддержка 24/7
       </p>
     </div>
   )
