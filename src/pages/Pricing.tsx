@@ -7,7 +7,7 @@ const plans = [
     price: '200',
     perDay: '~6.7',
     emoji: '⚡',
-    label: 'Попробовать',
+    label: 'Купить в боте',
     highlight: false,
     description: 'Идеально для теста перед долгосрочным подключением',
   },
@@ -17,7 +17,7 @@ const plans = [
     price: '500',
     perDay: '~5.5',
     emoji: '🔥',
-    label: 'Популярный выбор',
+    label: 'Купить в боте',
     highlight: true,
     description: 'Оптимальный вариант для постоянного использования',
   },
@@ -27,7 +27,7 @@ const plans = [
     price: '900',
     perDay: '~5.0',
     emoji: '💎',
-    label: 'Выгоднее',
+    label: 'Купить в боте',
     highlight: false,
     description: 'Полгода стабильного VPN с максимальной скоростью',
   },
@@ -37,18 +37,16 @@ const plans = [
     price: '1500',
     perDay: '~4.1',
     emoji: '🚀',
-    label: 'Максимум выгоды',
+    label: 'Купить в боте',
     highlight: false,
     description: 'Весь год без забот — самая низкая цена за день',
   },
 ]
 
+const BOT_URL = 'https://t.me/oaomvpvpnbot'
+
 const Pricing = () => {
   const navigate = useNavigate()
-
-  const handleBuy = (plan: typeof plans[0]) => {
-    navigate(`/checkout?plan=${plan.key}&price=${plan.price}&period=${encodeURIComponent(plan.period)}`)
-  }
 
   return (
     <div
@@ -75,7 +73,7 @@ const Pricing = () => {
           </span>
         </h1>
         <p className="text-white/50 text-lg max-w-md mx-auto">
-          Выберите период — ключ придёт сразу после оплаты
+          Выберите период и перейдите в бот для оплаты — ключ придёт мгновенно
         </p>
       </div>
 
@@ -111,9 +109,11 @@ const Pricing = () => {
             </div>
             <p className="text-white/30 text-xs mb-7">{plan.perDay} ₽ в день</p>
 
-            <button
-              onClick={() => handleBuy(plan)}
-              className="w-full py-3 rounded-lg font-bold text-sm transition duration-300 cursor-pointer"
+            <a
+              href={BOT_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-3 rounded-lg font-bold text-sm transition duration-300 text-center"
               style={
                 plan.highlight
                   ? { background: 'linear-gradient(90deg, #00c8ff, #0077ff)', color: '#000' }
@@ -121,13 +121,13 @@ const Pricing = () => {
               }
             >
               {plan.label} →
-            </button>
+            </a>
           </div>
         ))}
       </div>
 
       <p className="text-white/25 text-xs mt-10 z-10 text-center">
-        Оплата через ЮКасса · Ключ активируется мгновенно · Поддержка 24/7
+        Оплата через Telegram-бот · Ключ активируется мгновенно · Поддержка 24/7
       </p>
     </div>
   )
